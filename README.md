@@ -38,7 +38,7 @@ library-management-ai/
 
 ```bash
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+python app\main.py
 ```
 
 启动后访问 http://127.0.0.1:8000/docs 查看交互式 API 文档。
