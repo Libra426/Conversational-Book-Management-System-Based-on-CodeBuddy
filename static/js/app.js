@@ -58,6 +58,42 @@
   }
   function empty(msg) { return `<div class="empty">${icon('info', 26)}<div>${esc(msg)}</div></div>`; }
 
+  /* 自定义确认对话框（替代原生 confirm，形状与全站控件统一） */
+  function confirmDialog({ title = '确认操作', message, confirmText = '确认', danger = false }) {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-label', title);
+      overlay.innerHTML = `
+        <div class="modal">
+          <div class="modal-head"><span class="modal-ic${danger ? ' danger' : ''}">${icon(danger ? 'alert' : 'info', 18)}</span><span>${esc(title)}</span></div>
+          <div class="modal-body">${esc(message)}</div>
+          <div class="modal-foot">
+            <button type="button" class="btn btn-ghost" data-dlg-close>取消</button>
+            <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-dlg-ok>${esc(confirmText)}</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+
+      const close = (val) => {
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.remove(), 200);
+        resolve(val);
+      };
+      const onKey = (e) => { if (e.key === 'Escape') { document.removeEventListener('keydown', onKey); close(false); } };
+
+      overlay.querySelector('[data-dlg-ok]').addEventListener('click', () => { document.removeEventListener('keydown', onKey); close(true); });
+      overlay.querySelector('[data-dlg-close]').addEventListener('click', () => { document.removeEventListener('keydown', onKey); close(false); });
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) { document.removeEventListener('keydown', onKey); close(false); } });
+      document.addEventListener('keydown', onKey);
+
+      requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('show')));
+      overlay.querySelector('[data-dlg-ok]').focus();
+    });
+  }
+
   function toast(msg, tone) {
     const root = document.getElementById('toasts');
     const t = document.createElement('div');
@@ -568,21 +604,21 @@
       }
       case 'revoke-card': {
         const no = el.dataset.cardNo;
-        if (!confirm(`确定注销借阅证 ${no} 吗？`)) break;
+        if (!await confirmDialog({ title: '注销借阅证', message: `确定注销借阅证 ${no} 吗？此操作不可撤销。`, confirmText: '注销', danger: true })) break;
         try { await API.del(`/api/admin/borrow-cards/${encodeURIComponent(no)}`); toast(`已注销借阅证 ${no}`, 'success'); await loadCards(); }
         catch (e) { toast(e.message, 'error'); }
         break;
       }
       case 'delete-title': {
         const id = el.dataset.titleId;
-        if (!confirm(`确定删除图书《${el.dataset.titleName}》吗？`)) break;
+        if (!await confirmDialog({ title: '删除图书', message: `确定删除图书《${el.dataset.titleName}》吗？`, confirmText: '删除', danger: true })) break;
         try { await API.del(`/api/admin/book-titles/${id}`); toast('已删除标题', 'success'); await loadBooksAdmin(); await loadTitleOptions(); }
         catch (e) { toast(e.message, 'error'); }
         break;
       }
       case 'delete-staff': {
         const kind = el.dataset.kind, id = el.dataset.id;
-        if (!confirm(`确定删除 ${el.dataset.name} 吗？`)) break;
+        if (!await confirmDialog({ title: '删除人员', message: `确定删除 ${el.dataset.name} 吗？`, confirmText: '删除', danger: true })) break;
         try { await API.del(`/api/admin/${kind}/${id}`); toast('已删除', 'success'); await loadStaff(kind); }
         catch (e) { toast(e.message, 'error'); }
         break;
@@ -681,7 +717,7 @@
       }
       case 'remove-item': {
         const barcode = $('di-barcode').value.trim();
-        if (!confirm(`确定移除馆藏副本 ${barcode} 吗？`)) break;
+        if (!await confirmDialog({ title: '移除副本', message: `确定移除馆藏副本 ${barcode} 吗？`, confirmText: '移除', danger: true })) break;
         try {
           await API.del(`/api/admin/library-items/${encodeURIComponent(barcode)}`);
           setResult('add-item-result', true, '移除成功', `条码 ${barcode} 已移除`);
@@ -730,7 +766,7 @@
     if (state.role === 'reader') {
       $('identityBar').innerHTML = `
         <span class="identity-label">借阅证号</span>
-        <div class="uid-field"><input id="cardInput" type="text" value="${esc(state.cardNo)}" placeholder="如 CARD2026000001" style="width:160px"></div>
+        <div class="uid-field"><input id="cardInput" type="text" value="${esc(state.cardNo)}" placeholder="如 CARD2026000001"></div>
         <span class="identity-chip">${icon('bookOpen', 14)}${state.readerName ? esc(state.readerName) : '读者'}</span>`;
       $('cardInput').addEventListener('change', (e) => loginByCard(e.target.value));
       $('cardInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
