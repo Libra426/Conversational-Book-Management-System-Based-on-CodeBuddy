@@ -1,0 +1,40 @@
+@startuml
+actor Librarian
+participant "CirculationController" as Ctrl
+participant "CirculationService" as Svc
+participant "BorrowCardRepo" as CardRepo
+participant "LoanRepo" as LoanRepo
+participant "LibraryItemRepo" as ItemRepo
+participant "BorrowPolicyService" as Policy
+
+Librarian -> Ctrl : borrow(card_no, barcode)
+Ctrl -> Svc : borrow(card_no, barcode)
+
+Svc -> CardRepo : find_active_by_card_no(card_no)
+alt 借阅证无效
+  Svc --> Ctrl : InvalidCardError
+  Ctrl --> Librarian : 403 借阅证无效
+else 借阅证有效
+  Svc -> Policy : can_borrow(reader, current_loans)
+  alt 超过借阅数量
+    Svc --> Ctrl : TooManyLoansError
+    Ctrl --> Librarian : 409 超出借阅数量
+  else 存在超期未还
+    Svc --> Ctrl : OverdueLoanError
+    Ctrl --> Librarian : 409 存在超期未还图书
+  else 校验通过
+    Svc -> ItemRepo : find_by_barcode(barcode)
+    alt 副本不可借
+      Svc --> Ctrl : ItemNotBorrowableError
+      Ctrl --> Librarian : 409 图书不可借
+    else 副本可借
+      Svc -> Policy : due_date(reader_type, now)
+      Svc -> LoanRepo : create Loan(BORROWED, due_date)
+      Svc -> ItemRepo : update status=BORROWED
+      Svc --> Ctrl : LoanOut
+      Ctrl --> Librarian : 201 借书成功
+    end
+  end
+end
+
+@enduml

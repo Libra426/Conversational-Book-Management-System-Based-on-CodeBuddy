@@ -1,0 +1,34 @@
+@startuml
+actor Reader
+participant "ReservationController" as Ctrl
+participant "ReservationService" as Svc
+participant "ReaderRepo" as ReaderRepo
+participant "BookTitleRepo" as TitleRepo
+participant "ReservationRepo" as ResRepo
+
+Reader -> Ctrl : reserve(reader_id, title_id)
+Ctrl -> Svc : reserve(reader_id, title_id)
+
+Svc -> ReaderRepo : find_by_id(reader_id)
+alt 读者不存在
+  Svc --> Ctrl : ReaderNotFoundError
+  Ctrl --> Reader : 404 读者不存在
+else 读者存在
+  Svc -> TitleRepo : find_by_id(title_id)
+  alt 标题不存在
+    Svc --> Ctrl : TitleNotFoundError
+    Ctrl --> Reader : 404 标题不存在
+  else 标题存在
+    Svc -> ResRepo : find_active(reader_id, title_id)
+    alt 重复预约
+      Svc --> Ctrl : DuplicateReservationError
+      Ctrl --> Reader : 409 重复预约
+    else 可预约
+      Svc -> ResRepo : create Reservation(ACTIVE, created_at=now)
+      Svc --> Ctrl : ReservationOut
+      Ctrl --> Reader : 201 预约成功（按时间排队）
+    end
+  end
+end
+
+@enduml

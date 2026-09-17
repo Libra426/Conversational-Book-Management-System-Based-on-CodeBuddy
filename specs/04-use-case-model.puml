@@ -1,0 +1,49 @@
+@startuml
+left to right direction
+
+actor Reader
+actor Student
+actor Teacher
+actor Librarian
+actor SystemAdmin
+
+Reader <|-- Student
+Reader <|-- Teacher
+
+usecase "注册账号" as UC_Register
+usecase "查询图书" as UC_QueryBook
+usecase "查询借阅信息" as UC_QueryLoan
+usecase "预约图书" as UC_Reserve
+usecase "办理借书" as UC_Borrow
+usecase "办理还书" as UC_Return
+usecase "验证借阅证" as UC_ValidateCard
+usecase "检查借阅规则" as UC_CheckPolicy
+usecase "计算超期罚款" as UC_CalcFine
+usecase "办理借阅证" as UC_IssueCard
+usecase "删除借阅证" as UC_RevokeCard
+usecase "添加图书标题" as UC_AddTitle
+usecase "添加馆藏副本" as UC_AddItem
+usecase "添加/删除管理员" as UC_MaintainAdmin
+usecase "维护借阅规则" as UC_MaintainRule
+
+Reader --> UC_Register
+Reader --> UC_QueryBook
+Reader --> UC_QueryLoan
+Reader --> UC_Reserve
+
+Librarian --> UC_Borrow
+Librarian --> UC_Return
+Librarian --> UC_QueryLoan
+
+UC_Borrow ..> UC_ValidateCard : <<include>>
+UC_Borrow ..> UC_CheckPolicy : <<include>>
+UC_Return ..> UC_CalcFine : <<extend>>
+
+SystemAdmin --> UC_IssueCard
+SystemAdmin --> UC_RevokeCard
+SystemAdmin --> UC_AddTitle
+SystemAdmin --> UC_AddItem
+SystemAdmin --> UC_MaintainAdmin
+SystemAdmin --> UC_MaintainRule
+
+@enduml

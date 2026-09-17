@@ -1,0 +1,116 @@
+@startuml
+' 设计类图：分层架构中各层的类、接口及其依赖关系
+' 对应《实验指导书》实验一·步骤4 "设计各层包含的类、接口及其交互（类图）"
+
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+
+package "presentation 展现层 (routers)" {
+  class ReadersRouter <<APIRouter>>
+  class CatalogRouter <<APIRouter>>
+  class CirculationRouter <<APIRouter>>
+  class ReservationRouter <<APIRouter>>
+  class AdminRouter <<APIRouter>>
+}
+
+package "application 应用层 (services)" {
+  class ReaderService
+  class CatalogService
+  class CirculationService
+  class ReservationService
+  class AdminService
+  class BorrowPolicyService <<Strategy>>
+  class FineService <<Strategy>>
+}
+
+package "infrastructure 基础设施层 (repositories)" {
+  class ReaderRepo <<Repository>>
+  class BorrowCardRepo <<Repository>>
+  class BookTitleRepo <<Repository>>
+  class LibraryItemRepo <<Repository>>
+  class LoanRepo <<Repository>>
+  class FineRecordRepo <<Repository>>
+  class ReservationRepo <<Repository>>
+}
+
+package "domain 领域层 (entities)" {
+  class Reader
+  class BorrowCard
+  class BookTitle
+  class LibraryItem
+  class Loan
+  class Reservation
+  class BorrowPolicy
+  class FineRule
+  class FineRecord
+  class Librarian
+  class SystemAdmin
+}
+
+package "dto 传输对象 (schemas)" {
+  class ReaderCreate
+  class BorrowRequest
+  class ReturnRequest
+  class ReservationRequest
+}
+
+' 展现层 -> 应用层
+ReadersRouter ..> ReaderService
+ReadersRouter ..> CirculationService
+ReadersRouter ..> ReservationService
+CatalogRouter ..> CatalogService
+CirculationRouter ..> CirculationService
+ReservationRouter ..> ReservationService
+AdminRouter ..> ReaderService
+AdminRouter ..> CatalogService
+AdminRouter ..> BorrowPolicyService
+AdminRouter ..> FineService
+AdminRouter ..> AdminService
+
+' 应用层 -> 基础设施层（Repository 接口）
+ReaderService ..> ReaderRepo
+ReaderService ..> BorrowCardRepo
+CatalogService ..> BookTitleRepo
+CatalogService ..> LibraryItemRepo
+CirculationService ..> BorrowCardRepo
+CirculationService ..> LibraryItemRepo
+CirculationService ..> LoanRepo
+CirculationService ..> FineRecordRepo
+ReservationService ..> ReaderRepo
+ReservationService ..> BookTitleRepo
+ReservationService ..> ReservationRepo
+AdminService ..> ReaderRepo
+AdminService ..> BorrowCardRepo
+AdminService ..> BookTitleRepo
+AdminService ..> LibraryItemRepo
+
+' 应用层内部：CirculationService 组合两个策略服务
+CirculationService ..> BorrowPolicyService : <<use>>
+CirculationService ..> FineService : <<use>>
+
+' 基础设施层 -> 领域层
+ReaderRepo ..> Reader
+BorrowCardRepo ..> BorrowCard
+BookTitleRepo ..> BookTitle
+LibraryItemRepo ..> LibraryItem
+LoanRepo ..> Loan
+FineRecordRepo ..> FineRecord
+ReservationRepo ..> Reservation
+BorrowPolicyService ..> BorrowPolicy
+FineService ..> FineRule
+
+' 展现层 -> 传输对象
+ReadersRouter ..> ReaderCreate
+CirculationRouter ..> BorrowRequest
+CirculationRouter ..> ReturnRequest
+ReservationRouter ..> ReservationRequest
+
+note bottom of CirculationService
+  编排借阅/归还流程：
+  borrow() 依次调用 BorrowPolicyService
+  与 FineService 完成策略校验，
+  经 Repository 持久化，体现
+  服务层 + 策略 + 仓库 模式。
+end note
+
+@enduml

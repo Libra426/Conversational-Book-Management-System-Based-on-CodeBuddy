@@ -1,0 +1,36 @@
+@startuml
+actor Librarian
+participant "CirculationController" as Ctrl
+participant "CirculationService" as Svc
+participant "LibraryItemRepo" as ItemRepo
+participant "LoanRepo" as LoanRepo
+participant "FineService" as Fine
+
+Librarian -> Ctrl : return_book(barcode)
+Ctrl -> Svc : return_book(barcode)
+
+Svc -> ItemRepo : find_by_barcode(barcode)
+alt 非本馆藏书
+  Svc --> Ctrl : ItemNotFoundError
+  Ctrl --> Librarian : 404 非本馆藏书
+else 副本存在
+  Svc -> LoanRepo : find_active_by_item(item_id)
+  alt 未找到借阅记录
+    Svc --> Ctrl : LoanNotFoundError
+    Ctrl --> Librarian : 404 未找到借阅记录
+  else 找到借阅记录
+    Svc -> LoanRepo : set returned_at + status=RETURNED
+    Svc -> ItemRepo : update status=AVAILABLE
+    alt 超期 (returned_at > due_date)
+      Svc -> Fine : calculate(item_type, overdue_days)
+      Svc -> LoanRepo : create FineRecord(overdue_days, amount)
+      Svc --> Ctrl : ReturnOut(fine)
+      Ctrl --> Librarian : 200 还书成功，罚款 X 元
+    else 未超期
+      Svc --> Ctrl : ReturnOut(no fine)
+      Ctrl --> Librarian : 200 还书成功
+    end
+  end
+end
+
+@enduml

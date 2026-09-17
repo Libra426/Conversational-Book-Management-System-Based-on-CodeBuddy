@@ -1,0 +1,107 @@
+@startuml
+
+class Reader {
+  - id : int
+  - name : str
+  - department : str
+  - reader_type : ReaderType
+  - email : str
+  - phone : str
+}
+
+class BorrowCard {
+  - id : int
+  - card_no : str
+  - status : CardStatus
+  - issued_at : datetime
+}
+
+class BookTitle {
+  - id : int
+  - title : str
+  - author : str
+  - isbn : str
+  - publisher : str
+  - item_type : ItemType
+}
+
+class LibraryItem {
+  - id : int
+  - barcode : str
+  - status : ItemStatus
+}
+
+class Loan {
+  - id : int
+  - borrowed_at : datetime
+  - due_date : date
+  - returned_at : datetime
+  - status : LoanStatus
+  + is_overdue(now) : bool
+}
+
+class Reservation {
+  - id : int
+  - status : ReservationStatus
+  - created_at : datetime
+}
+
+class BorrowPolicy {
+  - reader_type : ReaderType
+  - max_borrow_count : int
+  - borrow_days : int
+  + can_borrow(current_count) : bool
+  + due_date(borrowed_at) : date
+}
+
+class FineRule {
+  - item_type : ItemType
+  - fine_per_day : float
+  + calculate(overdue_days) : float
+}
+
+class FineRecord {
+  - id : int
+  - overdue_days : int
+  - amount : float
+  - status : FineStatus
+  - created_at : datetime
+}
+
+class Librarian {
+  - id : int
+  - name : str
+}
+
+class SystemAdmin {
+  - id : int
+  - name : str
+}
+
+enum ReaderType {
+  UNDERGRADUATE
+  JUNIOR_COLLEGE
+  GRADUATE
+  DOCTOR
+  TEACHER
+}
+
+enum ItemType {
+  CHINESE_BOOK
+  FOREIGN_BOOK
+  CHINESE_MAGAZINE
+  FOREIGN_MAGAZINE
+  THESIS
+}
+
+Reader "1" -- "1" BorrowCard : owns
+Reader "1" -- "*" Loan : has
+Reader "1" -- "*" Reservation : makes
+BookTitle "1" -- "*" LibraryItem : has copies
+LibraryItem "1" -- "0..1" Loan : lent as
+BookTitle "1" -- "*" Reservation : reserved
+Loan "1" -- "*" FineRecord : incurs
+BorrowPolicy "1" -- "1" ReaderType : for
+FineRule "1" -- "1" ItemType : for
+
+@enduml

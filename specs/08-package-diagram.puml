@@ -1,0 +1,60 @@
+@startuml
+
+package "presentation (routers)" {
+  [readers]
+  [catalog]
+  [circulation]
+  [reservations]
+  [admin]
+}
+
+package "application (services)" {
+  [reader_service]
+  [catalog_service]
+  [circulation_service]
+  [reservation_service]
+  [fine_service]
+  [policy_service]
+}
+
+package "domain" {
+  [entities]
+  [enums]
+}
+
+package "infrastructure" {
+  [repositories]
+  [database]
+}
+
+package "dto (schemas)" {
+  [schemas]
+}
+
+[readers] --> [reader_service]
+[catalog] --> [catalog_service]
+[circulation] --> [circulation_service]
+[reservations] --> [reservation_service]
+[admin] --> [catalog_service]
+[admin] --> [reader_service]
+
+[reader_service] --> [entities]
+[catalog_service] --> [entities]
+[circulation_service] --> [entities]
+[circulation_service] --> [policy_service]
+[circulation_service] --> [fine_service]
+[reservation_service] --> [entities]
+
+[reader_service] --> [repositories]
+[catalog_service] --> [repositories]
+[circulation_service] --> [repositories]
+[reservation_service] --> [repositories]
+[repositories] --> [database]
+
+[readers] --> [schemas]
+[catalog] --> [schemas]
+[circulation] --> [schemas]
+[reservations] --> [schemas]
+[admin] --> [schemas]
+
+@enduml

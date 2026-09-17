@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图书管理系统</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --card: #fff;
+      --border: #e3e6ea;
+      --text: #1f2329;
+      --muted: #6b7280;
+      --primary: #2f6fed;
+      --danger: #d64545;
+      --ok: #1a7f37;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .identity {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .identity select,
+    .identity input {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    main {
+      max-width: 1080px;
+      margin: 24px auto;
+      padding: 0 24px 60px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+
+    .card h2 {
+      font-size: 15px;
+      margin: 0 0 14px;
+    }
+
+    .ops {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .op {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .op h3 {
+      font-size: 13px;
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .field {
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: .9;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .result {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: ui-monospace, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      display: none;
+    }
+
+    .result.ok {
+      display: block;
+      background: #eefaf1;
+      color: var(--ok);
+      border: 1px solid #bfe6c8;
+    }
+
+    .result.err {
+      display: block;
+      background: #fdf0f0;
+      color: var(--danger);
+      border: 1px solid #f2c4c4;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>图书管理系统</h1>
+    <div class="identity">
+      <label for="role" style="margin:0">角色</label>
+      <select id="role">
+        <option value="reader">读者</option>
+        <option value="librarian">图书管理员</option>
+        <option value="admin">系统管理员</option>
+      </select>
+      <label for="uid" style="margin:0">用户ID</label>
+      <input id="uid" type="number" value="0" style="width:90px">
+    </div>
+  </header>
+
+  <main>
+    <!-- 公共区 -->
+    <section class="card">
+      <h2>图书查询</h2>
+      <div class="ops" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
+        <div class="field"><label>书名</label><input id="q-title"></div>
+        <div class="field"><label>作者</label><input id="q-author"></div>
+        <div class="field"><label>ISBN</label><input id="q-isbn"></div>
+        <div class="field" style="align-self:end"><button onclick="searchBooks()">查询</button></div>
+      </div>
+      <div id="catalog-result"></div>
+    </section>
+
+    <section class="card">
+      <h2>注册读者</h2>
+      <div class="ops">
+        <div class="field"><label>姓名</label><input id="r-name"></div>
+        <div class="field"><label>院系</label><input id="r-dept"></div>
+        <div class="field">
+          <label>读者类型</label>
+          <select id="r-type">
+            <option value="UNDERGRADUATE">本科生</option>
+            <option value="JUNIOR_COLLEGE">专科生</option>
+            <option value="GRADUATE">研究生</option>
+            <option value="DOCTOR">博士生</option>
+            <option value="TEACHER">教师</option>
+          </select>
+        </div>
+        <div class="field"><label>邮箱（可选）</label><input id="r-email"></div>
+        <div class="field"><label>电话（可选）</label><input id="r-phone"></div>
+        <div class="field" style="align-self:end"><button onclick="registerReader()">注册</button></div>
+      </div>
+      <div id="reader-result" class="result"></div>
+    </section>
+
+    <!-- 读者 -->
+    <section class="card hidden" id="sec-reader">
+      <h2>读者操作</h2>
+      <div class="ops">
+        <div class="op">
+          <h3>预约图书</h3>
+          <div class="field"><label>读者ID</label><input id="rv-reader"></div>
+          <div class="field"><label>图书标题ID</label><input id="rv-title"></div>
+          <button onclick="reserveBook()">预约</button>
+          <div id="reserve-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>查询我的借阅</h3>
+          <div class="field"><label>读者ID</label><input id="loans-reader"></div>
+          <button onclick="queryLoans()">查询</button>
+          <div id="loans-result"></div>
+        </div>
+        <div class="op">
+          <h3>查询我的预约</h3>
+          <div class="field"><label>读者ID</label><input id="resv-reader"></div>
+          <button onclick="queryReservations()">查询</button>
+          <div id="reservations-result"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 图书管理员 -->
+    <section class="card hidden" id="sec-librarian">
+      <h2>图书管理员操作</h2>
+      <div class="ops">
+        <div class="op">
+          <h3>办理借书</h3>
+          <div class="field"><label>借阅证号</label><input id="b-card"></div>
+          <div class="field"><label>馆藏条码</label><input id="b-barcode"></div>
+          <button onclick="borrowBook()">借书</button>
+          <div id="borrow-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>办理还书</h3>
+          <div class="field"><label>馆藏条码</label><input id="rt-barcode"></div>
+          <button onclick="returnBook()">还书</button>
+          <div class="hint">超期还书将自动计算罚款</div>
+          <div id="return-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>查询读者借阅</h3>
+          <div class="field"><label>读者ID</label><input id="lb-reader"></div>
+          <button onclick="queryLoansAsLibrarian()">查询</button>
+          <div id="librarian-loans-result"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 系统管理员 -->
+    <section class="card hidden" id="sec-admin">
+      <h2>系统管理员操作</h2>
+      <div class="ops">
+        <div class="op">
+          <h3>办理借阅证</h3>
+          <div class="field"><label>读者ID</label><input id="a-card-reader"></div>
+          <button onclick="issueCard()">办理</button>
+          <div id="issue-card-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>添加图书标题</h3>
+          <div class="field"><label>书名</label><input id="t-title"></div>
+          <div class="field"><label>作者</label><input id="t-author"></div>
+          <div class="field"><label>ISBN</label><input id="t-isbn"></div>
+          <div class="field"><label>出版社（可选）</label><input id="t-publisher"></div>
+          <div class="field">
+            <label>类型</label>
+            <select id="t-type">
+              <option value="CHINESE_BOOK">中文图书</option>
+              <option value="FOREIGN_BOOK">外文图书</option>
+              <option value="CHINESE_MAGAZINE">中文杂志</option>
+              <option value="FOREIGN_MAGAZINE">外文杂志</option>
+              <option value="THESIS">论文</option>
+            </select>
+          </div>
+          <button onclick="addTitle()">添加</button>
+          <div id="add-title-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>添加馆藏副本</h3>
+          <div class="field"><label>标题ID</label><input id="i-title"></div>
+          <div class="field"><label>条码</label><input id="i-barcode"></div>
+          <button onclick="addItem()">添加</button>
+          <div id="add-item-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>维护借阅规则</h3>
+          <div class="field">
+            <label>读者类型</label>
+            <select id="p-type">
+              <option value="UNDERGRADUATE">本科生</option>
+              <option value="JUNIOR_COLLEGE">专科生</option>
+              <option value="GRADUATE">研究生</option>
+              <option value="DOCTOR">博士生</option>
+              <option value="TEACHER">教师</option>
+            </select>
+          </div>
+          <div class="field"><label>借阅上限</label><input id="p-count" type="number"></div>
+          <div class="field"><label>借阅天数</label><input id="p-days" type="number"></div>
+          <button onclick="upsertPolicy()">保存</button>
+          <div id="policy-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>维护罚款规则</h3>
+          <div class="field">
+            <label>借出物类型</label>
+            <select id="f-type">
+              <option value="CHINESE_BOOK">中文图书</option>
+              <option value="FOREIGN_BOOK">外文图书</option>
+              <option value="CHINESE_MAGAZINE">中文杂志</option>
+              <option value="FOREIGN_MAGAZINE">外文杂志</option>
+              <option value="THESIS">论文</option>
+            </select>
+          </div>
+          <div class="field"><label>罚款（元/天）</label><input id="f-fine" type="number" step="0.01"></div>
+          <button onclick="upsertFineRule()">保存</button>
+          <div id="fine-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>注销借阅证</h3>
+          <div class="field"><label>借阅证号</label><input id="rc-card"></div>
+          <button onclick="revokeCard()">注销</button>
+          <div id="revoke-card-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>删除图书标题</h3>
+          <div class="field"><label>标题ID</label><input id="dt-id"></div>
+          <button onclick="deleteTitle()">删除</button>
+          <div id="delete-title-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>删除馆藏副本</h3>
+          <div class="field"><label>条码</label><input id="di-barcode"></div>
+          <button onclick="removeItem()">删除</button>
+          <div id="remove-item-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>添加图书管理员</h3>
+          <div class="field"><label>姓名</label><input id="l-name"></div>
+          <button onclick="addLibrarian()">添加</button>
+          <div id="add-librarian-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>删除图书管理员</h3>
+          <div class="field"><label>管理员ID</label><input id="dl-id"></div>
+          <button onclick="deleteLibrarian()">删除</button>
+          <div id="delete-librarian-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>添加系统管理员</h3>
+          <div class="field"><label>姓名</label><input id="sa-name"></div>
+          <button onclick="addSystemAdmin()">添加</button>
+          <div id="add-sysadmin-result" class="result"></div>
+        </div>
+        <div class="op">
+          <h3>删除系统管理员</h3>
+          <div class="field"><label>管理员ID</label><input id="dsa-id"></div>
+          <button onclick="deleteSystemAdmin()">删除</button>
+          <div id="delete-sysadmin-result" class="result"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ITEM_TYPES = {
+      CHINESE_BOOK: '中文图书', FOREIGN_BOOK: '外文图书',
+      CHINESE_MAGAZINE: '中文杂志', FOREIGN_MAGAZINE: '外文杂志', THESIS: '论文',
+    };
+    const state = { role: 'reader', uid: 0 };
+
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function val(id) { return document.getElementById(id).value.trim(); }
+    function num(id) { const v = val(id); return v === '' ? null : Number(v); }
+
+    function headers() {
+      return {
+        'Content-Type': 'application/json',
+        'X-Role': state.role,
+        'X-User-Id': String(state.uid),
+      };
+    }
+
+    async function api(method, path, body) {
+      const opts = { method, headers: headers() };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      const res = await fetch(path, opts);
+      let data = null;
+      try { data = await res.json(); } catch (e) { /* ignore */ }
+      if (!res.ok) {
+        let msg = 'HTTP ' + res.status;
+        if (data && data.detail) {
+          msg = Array.isArray(data.detail) ? data.detail.map(d => d.msg || JSON.stringify(d)).join('; ') : String(data.detail);
+        }
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    function showJson(id, obj) {
+      const el = document.getElementById(id);
+      el.className = 'result ok';
+      el.textContent = JSON.stringify(obj, null, 2);
+    }
+    function showErr(id, e) {
+      const el = document.getElementById(id);
+      el.className = 'result err';
+      el.textContent = '错误：' + e.message;
+    }
+    function table(columns, rows) {
+      const t = document.createElement('table');
+      t.innerHTML = '<thead><tr>' + columns.map(c => `<th>${esc(c)}</th>`).join('') + '</tr></thead>';
+      const tb = document.createElement('tbody');
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = columns.map(c => `<td>${esc(r[c])}</td>`).join('');
+        tb.appendChild(tr);
+      });
+      t.appendChild(tb);
+      return t;
+    }
+
+    function updateSections() {
+      const r = document.getElementById('role').value;
+      document.getElementById('sec-reader').classList.toggle('hidden', r !== 'reader');
+      document.getElementById('sec-librarian').classList.toggle('hidden', r !== 'librarian');
+      document.getElementById('sec-admin').classList.toggle('hidden', r !== 'admin');
+    }
+
+    document.getElementById('role').addEventListener('change', () => { state.role = document.getElementById('role').value; updateSections(); });
+    document.getElementById('uid').addEventListener('input', () => { state.uid = Number(document.getElementById('uid').value) || 0; });
+
+    async function searchBooks() {
+      const p = new URLSearchParams();
+      if (val('q-title')) p.set('title', val('q-title'));
+      if (val('q-author')) p.set('author', val('q-author'));
+      if (val('q-isbn')) p.set('isbn', val('q-isbn'));
+      const box = document.getElementById('catalog-result');
+      box.innerHTML = '';
+      try {
+        const list = await api('GET', '/api/catalog/books?' + p.toString());
+        if (!list.length) { box.innerHTML = '<div class="hint">未找到图书</div>'; return; }
+        const rows = list.map(b => ({ 'ID': b.id, '书名': b.title, '作者': b.author, 'ISBN': b.isbn, '出版社': b.publisher || '', '类型': ITEM_TYPES[b.item_type] || b.item_type }));
+        box.appendChild(table(['ID', '书名', '作者', 'ISBN', '出版社', '类型'], rows));
+      } catch (e) { showErr('catalog-result', e); }
+    }
+
+    async function registerReader() {
+      const body = { name: val('r-name'), department: val('r-dept'), reader_type: val('r-type') };
+      if (val('r-email')) body.email = val('r-email');
+      if (val('r-phone')) body.phone = val('r-phone');
+      try { showJson('reader-result', await api('POST', '/api/readers', body)); }
+      catch (e) { showErr('reader-result', e); }
+    }
+
+    async function reserveBook() {
+      try { showJson('reserve-result', await api('POST', '/api/reservations', { reader_id: num('rv-reader'), title_id: num('rv-title') })); }
+      catch (e) { showErr('reserve-result', e); }
+    }
+
+    async function queryLoans() {
+      const id = num('loans-reader');
+      const box = document.getElementById('loans-result');
+      box.innerHTML = '';
+      try {
+        const list = await api('GET', `/api/readers/${id}/loans`);
+        if (!list.length) { box.innerHTML = '<div class="hint">暂无借阅</div>'; return; }
+        const rows = list.map(l => ({ '借阅ID': l.id, '馆藏ID': l.item_id, '借出时间': l.borrowed_at, '应还日期': l.due_date, '状态': l.status }));
+        box.appendChild(table(['借阅ID', '馆藏ID', '借出时间', '应还日期', '状态'], rows));
+      } catch (e) { showErr('loans-result', e); }
+    }
+
+    async function queryLoansAsLibrarian() {
+      const id = num('lb-reader');
+      const box = document.getElementById('librarian-loans-result');
+      box.innerHTML = '';
+      try {
+        const list = await api('GET', `/api/readers/${id}/loans`);
+        if (!list.length) { box.innerHTML = '<div class="hint">暂无借阅</div>'; return; }
+        const rows = list.map(l => ({ '借阅ID': l.id, '读者ID': l.reader_id, '馆藏ID': l.item_id, '借出时间': l.borrowed_at, '应还日期': l.due_date, '状态': l.status }));
+        box.appendChild(table(['借阅ID', '读者ID', '馆藏ID', '借出时间', '应还日期', '状态'], rows));
+      } catch (e) { showErr('librarian-loans-result', e); }
+    }
+
+    async function queryReservations() {
+      const id = num('resv-reader');
+      const box = document.getElementById('reservations-result');
+      box.innerHTML = '';
+      try {
+        const list = await api('GET', `/api/readers/${id}/reservations`);
+        if (!list.length) { box.innerHTML = '<div class="hint">暂无预约</div>'; return; }
+        const rows = list.map(r => ({ '预约ID': r.id, '标题ID': r.title_id, '状态': r.status, '创建时间': r.created_at }));
+        box.appendChild(table(['预约ID', '标题ID', '状态', '创建时间'], rows));
+      } catch (e) { showErr('reservations-result', e); }
+    }
+
+    async function borrowBook() {
+      try { showJson('borrow-result', await api('POST', '/api/circulation/borrow', { card_no: val('b-card'), barcode: val('b-barcode') })); }
+      catch (e) { showErr('borrow-result', e); }
+    }
+
+    async function returnBook() {
+      try { showJson('return-result', await api('POST', '/api/circulation/return', { barcode: val('rt-barcode') })); }
+      catch (e) { showErr('return-result', e); }
+    }
+
+    async function issueCard() {
+      try { showJson('issue-card-result', await api('POST', '/api/admin/borrow-cards', { reader_id: num('a-card-reader') })); }
+      catch (e) { showErr('issue-card-result', e); }
+    }
+
+    async function addTitle() {
+      const body = { title: val('t-title'), author: val('t-author'), isbn: val('t-isbn'), item_type: val('t-type') };
+      if (val('t-publisher')) body.publisher = val('t-publisher');
+      try { showJson('add-title-result', await api('POST', '/api/admin/book-titles', body)); }
+      catch (e) { showErr('add-title-result', e); }
+    }
+
+    async function addItem() {
+      try { showJson('add-item-result', await api('POST', '/api/admin/library-items', { title_id: num('i-title'), barcode: val('i-barcode') })); }
+      catch (e) { showErr('add-item-result', e); }
+    }
+
+    async function upsertPolicy() {
+      try { showJson('policy-result', await api('POST', '/api/admin/borrow-policies', { reader_type: val('p-type'), max_borrow_count: num('p-count'), borrow_days: num('p-days') })); }
+      catch (e) { showErr('policy-result', e); }
+    }
+
+    async function upsertFineRule() {
+      try { showJson('fine-result', await api('POST', '/api/admin/fine-rules', { item_type: val('f-type'), fine_per_day: parseFloat(val('f-fine')) })); }
+      catch (e) { showErr('fine-result', e); }
+    }
+
+    function showOk(id, msg) {
+      const el = document.getElementById(id);
+      el.className = 'result ok';
+      el.textContent = msg;
+    }
+
+    async function deleteApi(path) {
+      const res = await fetch(path, { method: 'DELETE', headers: headers() });
+      let data = null;
+      try { data = await res.json(); } catch (e) { /* 204 无响应体 */ }
+      if (!res.ok) {
+        let msg = 'HTTP ' + res.status;
+        if (data && data.detail) {
+          msg = Array.isArray(data.detail) ? data.detail.map(d => d.msg || JSON.stringify(d)).join('; ') : String(data.detail);
+        }
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    async function revokeCard() {
+      try { showJson('revoke-card-result', await deleteApi(`/api/admin/borrow-cards/${val('rc-card')}`)); }
+      catch (e) { showErr('revoke-card-result', e); }
+    }
+
+    async function deleteTitle() {
+      try { await deleteApi(`/api/admin/book-titles/${num('dt-id')}`); showOk('delete-title-result', '删除成功'); }
+      catch (e) { showErr('delete-title-result', e); }
+    }
+
+    async function removeItem() {
+      try { showJson('remove-item-result', await deleteApi(`/api/admin/library-items/${val('di-barcode')}`)); }
+      catch (e) { showErr('remove-item-result', e); }
+    }
+
+    async function addLibrarian() {
+      try { showJson('add-librarian-result', await api('POST', '/api/admin/librarians', { name: val('l-name') })); }
+      catch (e) { showErr('add-librarian-result', e); }
+    }
+
+    async function deleteLibrarian() {
+      try { await deleteApi(`/api/admin/librarians/${num('dl-id')}`); showOk('delete-librarian-result', '删除成功'); }
+      catch (e) { showErr('delete-librarian-result', e); }
+    }
+
+    async function addSystemAdmin() {
+      try { showJson('add-sysadmin-result', await api('POST', '/api/admin/system-admins', { name: val('sa-name') })); }
+      catch (e) { showErr('add-sysadmin-result', e); }
+    }
+
+    async function deleteSystemAdmin() {
+      try { await deleteApi(`/api/admin/system-admins/${num('dsa-id')}`); showOk('delete-sysadmin-result', '删除成功'); }
+      catch (e) { showErr('delete-sysadmin-result', e); }
+    }
+
+    updateSections();
+  </script>
+</body>
+
+</html>
