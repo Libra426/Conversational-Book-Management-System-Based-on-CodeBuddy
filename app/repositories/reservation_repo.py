@@ -1,5 +1,5 @@
 """预约仓储。"""
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from ..domain.enums import ReservationStatus
 from ..domain.models import Reservation
@@ -23,6 +23,7 @@ class ReservationRepo:
     def list_by_reader(self, reader_id: int) -> list[Reservation]:
         return (
             self.db.query(Reservation)
+            .options(joinedload(Reservation.title))
             .filter(Reservation.reader_id == reader_id)
             .order_by(Reservation.created_at.asc())
             .all()

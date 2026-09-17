@@ -1,4 +1,6 @@
 """数据库初始化与默认规则/演示数据种子。"""
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from .database import Base, SessionLocal, engine
@@ -42,7 +44,7 @@ DEMO_TITLES: list[tuple[str, str, str, str, ItemType, list[str]]] = [
      ["BC-5001"]),
 ]
 
-# 演示读者：姓名/院系/类型，配一张借阅证（证号 1/2/3）
+# 演示读者：姓名/院系/类型，配一张借阅证（证号 CARD+年份+6位序号）
 DEMO_READERS: list[tuple[str, str, ReaderType]] = [
     ("张三", "计算机学院", ReaderType.UNDERGRADUATE),
     ("李四", "人工智能学院", ReaderType.GRADUATE),
@@ -78,11 +80,14 @@ def seed_demo_data(db: Session) -> None:
         for barcode in barcodes:
             db.add(LibraryItem(barcode=barcode, title_id=book.id, status=ItemStatus.AVAILABLE))
 
+    year = datetime.now().year
     for idx, (name, department, reader_type) in enumerate(DEMO_READERS, start=1):
         reader = Reader(name=name, department=department, reader_type=reader_type)
         db.add(reader)
         db.flush()  # 取得 reader.id
-        db.add(BorrowCard(card_no=str(idx), reader_id=reader.id, status=CardStatus.ACTIVE))
+        db.add(BorrowCard(
+            card_no=f"CARD{year}{idx:06d}", reader_id=reader.id, status=CardStatus.ACTIVE
+        ))
 
     db.commit()
 

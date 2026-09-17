@@ -3,7 +3,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from ..domain.enums import LoanStatus
+from ..domain.enums import ItemType, LoanStatus
 
 
 class BorrowRequest(BaseModel):
@@ -26,6 +26,10 @@ class LoanOut(BaseModel):
     id: int
     reader_id: int
     item_id: int
+    barcode: str
+    title: str
+    author: str
+    item_type: ItemType
     borrowed_at: datetime
     due_date: date
     returned_at: datetime | None = None

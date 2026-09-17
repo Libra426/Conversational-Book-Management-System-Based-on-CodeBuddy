@@ -15,6 +15,9 @@ class AdminService:
         self.db.commit()
         return librarian
 
+    def list_librarians(self) -> list[Librarian]:
+        return self.db.query(Librarian).order_by(Librarian.id).all()
+
     def delete_librarian(self, librarian_id: int) -> None:
         librarian = self.db.get(Librarian, librarian_id)
         if librarian is None:
@@ -27,6 +30,9 @@ class AdminService:
         self.db.add(admin)
         self.db.commit()
         return admin
+
+    def list_system_admins(self) -> list[SystemAdmin]:
+        return self.db.query(SystemAdmin).order_by(SystemAdmin.id).all()
 
     def delete_system_admin(self, admin_id: int) -> None:
         admin = self.db.get(SystemAdmin, admin_id)

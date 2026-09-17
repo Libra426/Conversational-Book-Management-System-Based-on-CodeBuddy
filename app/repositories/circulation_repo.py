@@ -1,10 +1,10 @@
 """借阅与罚单仓储。"""
 from datetime import date
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from ..domain.enums import LoanStatus
-from ..domain.models import FineRecord, Loan
+from ..domain.models import FineRecord, LibraryItem, Loan
 
 
 class LoanRepo:
@@ -40,6 +40,7 @@ class LoanRepo:
     def list_by_reader(self, reader_id: int) -> list[Loan]:
         return (
             self.db.query(Loan)
+            .options(joinedload(Loan.item).joinedload(LibraryItem.title))
             .filter(Loan.reader_id == reader_id)
             .order_by(Loan.borrowed_at.desc())
             .all()

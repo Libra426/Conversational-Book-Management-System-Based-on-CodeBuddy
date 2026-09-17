@@ -36,6 +36,26 @@ def test_reader_cannot_query_others(client):
     assert resp.json()["code"] == "PERMISSION_DENIED"
 
 
+def test_reader_cannot_query_other_reader_info(client):
+    reader1 = register_reader(client, name="甲")
+    reader2 = register_reader(client, name="乙")
+    resp = client.get(
+        f"/api/readers/{reader2['id']}",
+        headers={"X-Role": "reader", "X-User-Id": str(reader1["id"])},
+    )
+    assert resp.status_code == 403
+
+
+def test_reader_can_query_own_info(client):
+    reader = register_reader(client)
+    resp = client.get(
+        f"/api/readers/{reader['id']}",
+        headers={"X-Role": "reader", "X-User-Id": str(reader["id"])},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["name"] == "张三"
+
+
 def test_bearer_token_grants_admin(client):
     reader = register_reader(client)
     resp = client.post(

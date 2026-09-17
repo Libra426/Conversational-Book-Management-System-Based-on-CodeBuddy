@@ -25,6 +25,9 @@ class FineService:
     def calculate_fine(self, item_type: ItemType, overdue_days: int) -> float:
         return self.get_rule(item_type).calculate(overdue_days)
 
+    def list_all(self) -> list[FineRule]:
+        return self.db.query(FineRule).order_by(FineRule.id).all()
+
     def upsert(self, data: FineRuleUpsert) -> FineRule:
         rule = self.db.query(FineRule).filter(FineRule.item_type == data.item_type).first()
         if rule is None:

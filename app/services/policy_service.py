@@ -36,6 +36,9 @@ class BorrowPolicyService:
         borrowed_on = borrowed_on or date.today()
         return borrowed_on + timedelta(days=self.get_borrow_days(reader_type))
 
+    def list_all(self) -> list[BorrowPolicy]:
+        return self.db.query(BorrowPolicy).order_by(BorrowPolicy.id).all()
+
     def upsert(self, data: BorrowPolicyUpsert) -> BorrowPolicy:
         policy = (
             self.db.query(BorrowPolicy)

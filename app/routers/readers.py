@@ -1,5 +1,5 @@
 """读者相关路由。"""
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -19,8 +19,31 @@ def register_reader(data: ReaderCreate, db: Session = Depends(get_db)):
     return ReaderService(db).register(data)
 
 
+@router.get("/readers", response_model=list[ReaderOut])
+def list_readers(
+    db: Session = Depends(get_db),
+    identity: tuple[str, int] = Depends(get_identity),
+):
+    role, _ = identity
+    if role not in ("librarian", "admin"):
+        raise HTTPException(status_code=403, detail="需要图书管理员或系统管理员权限")
+    return ReaderService(db).list_readers()
+
+
+@router.get("/readers/by-card/{card_no}", response_model=ReaderOut)
+def get_reader_by_card(card_no: str, db: Session = Depends(get_db)):
+    return ReaderService(db).get_reader_by_card(card_no)
+
+
 @router.get("/readers/{reader_id}", response_model=ReaderOut)
-def get_reader(reader_id: int, db: Session = Depends(get_db)):
+def get_reader(
+    reader_id: int,
+    db: Session = Depends(get_db),
+    identity: tuple[str, int] = Depends(get_identity),
+):
+    role, user_id = identity
+    if role not in ("librarian", "admin") and not (role == "reader" and user_id == reader_id):
+        raise HTTPException(status_code=403, detail="只能查询本人信息")
     return ReaderService(db).get_reader(reader_id)
 
 

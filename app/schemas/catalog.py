@@ -21,6 +21,8 @@ class BookTitleOut(BaseModel):
     isbn: str
     publisher: str | None = None
     item_type: ItemType
+    total_count: int
+    available_count: int
 
 
 class LibraryItemCreate(BaseModel):

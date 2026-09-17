@@ -38,6 +38,19 @@ class ReaderService:
             raise ReaderNotFoundError("读者不存在")
         return reader
 
+    def get_reader_by_card(self, card_no: str) -> Reader:
+        """读者用借阅证号登录：借阅证号 → 读者（仅有效证）。"""
+        card = self.card_repo.find_active_by_card_no(card_no)
+        if card is None:
+            raise NotFoundError("借阅证不存在或已注销")
+        return card.reader
+
+    def list_readers(self) -> list[Reader]:
+        return self.reader_repo.list_all()
+
+    def list_cards(self) -> list[BorrowCard]:
+        return self.card_repo.list_all()
+
     def issue_card(self, reader_id: int) -> BorrowCard:
         reader = self.reader_repo.get(reader_id)
         if reader is None:
@@ -65,5 +78,7 @@ class ReaderService:
         return card
 
     def _generate_card_no(self) -> str:
-        seq = self.card_repo.count() + 1
-        return str(seq)
+        # BR-002：借阅证号格式 `CARD` + 4 位年份 + 6 位序号，全局唯一。
+        year = datetime.now().year
+        seq = self.card_repo.max_sequence_for_year(year) + 1
+        return f"CARD{year}{seq:06d}"

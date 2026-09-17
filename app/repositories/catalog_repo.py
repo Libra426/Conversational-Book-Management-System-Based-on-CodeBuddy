@@ -1,5 +1,5 @@
 """图书标题与馆藏副本仓储。"""
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from ..domain.models import BookTitle, LibraryItem
 
@@ -15,7 +15,7 @@ class BookTitleRepo:
         return self.db.query(BookTitle).filter(BookTitle.isbn == isbn).first()
 
     def search(self, title: str | None, author: str | None, isbn: str | None):
-        q = self.db.query(BookTitle)
+        q = self.db.query(BookTitle).options(joinedload(BookTitle.items))
         if title:
             q = q.filter(BookTitle.title.contains(title))
         if author:

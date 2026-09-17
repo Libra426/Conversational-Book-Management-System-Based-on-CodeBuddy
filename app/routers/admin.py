@@ -5,13 +5,16 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..deps import require_admin
 from ..schemas.admin import (
+    BorrowPolicyOut,
     BorrowPolicyUpsert,
+    FineRuleOut,
     FineRuleUpsert,
     LibrarianCreate,
+    StaffOut,
     SystemAdminCreate,
 )
-from ..schemas.catalog import BookTitleCreate, BookTitleOut, LibraryItemCreate, LibraryItemOut
 from ..schemas.reader import BorrowCardOut, IssueCardRequest
+from ..schemas.catalog import BookTitleCreate, BookTitleOut, LibraryItemCreate, LibraryItemOut
 from ..services.admin_service import AdminService
 from ..services.catalog_service import CatalogService
 from ..services.fine_service import FineService
@@ -28,6 +31,14 @@ def issue_card(
     _: int = Depends(require_admin),
 ):
     return ReaderService(db).issue_card(data.reader_id)
+
+
+@router.get("/borrow-cards", response_model=list[BorrowCardOut])
+def list_cards(
+    db: Session = Depends(get_db),
+    _: int = Depends(require_admin),
+):
+    return ReaderService(db).list_cards()
 
 
 @router.delete("/borrow-cards/{card_no}", response_model=BorrowCardOut)
@@ -75,6 +86,22 @@ def remove_item(
     return CatalogService(db).remove_item(barcode)
 
 
+@router.get("/borrow-policies", response_model=list[BorrowPolicyOut])
+def list_borrow_policies(
+    db: Session = Depends(get_db),
+    _: int = Depends(require_admin),
+):
+    return BorrowPolicyService(db).list_all()
+
+
+@router.get("/fine-rules", response_model=list[FineRuleOut])
+def list_fine_rules(
+    db: Session = Depends(get_db),
+    _: int = Depends(require_admin),
+):
+    return FineService(db).list_all()
+
+
 @router.post("/borrow-policies", status_code=200)
 def upsert_policy(
     data: BorrowPolicyUpsert,
@@ -99,6 +126,14 @@ def upsert_fine_rule(
     return {"item_type": rule.item_type.value, "fine_per_day": rule.fine_per_day}
 
 
+@router.get("/librarians", response_model=list[StaffOut])
+def list_librarians(
+    db: Session = Depends(get_db),
+    _: int = Depends(require_admin),
+):
+    return AdminService(db).list_librarians()
+
+
 @router.post("/librarians", status_code=201)
 def add_librarian(
     data: LibrarianCreate,
@@ -116,6 +151,14 @@ def delete_librarian(
     _: int = Depends(require_admin),
 ):
     AdminService(db).delete_librarian(librarian_id)
+
+
+@router.get("/system-admins", response_model=list[StaffOut])
+def list_system_admins(
+    db: Session = Depends(get_db),
+    _: int = Depends(require_admin),
+):
+    return AdminService(db).list_system_admins()
 
 
 @router.post("/system-admins", status_code=201)

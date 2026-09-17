@@ -58,3 +58,27 @@
 - **人工审查结果**：演示卡号 CARD-001/002/003 与条码 BC-xxxx 与借还接口字段一致，端到端借书(201)/还书(200)/查询(200)验证通过。
 - **测试结果**：29 个测试全部通过（不受演示数据影响，测试库独立）。
 - **Git 提交**：（待提交）
+
+## 第 6 次使用
+
+- **使用工具**：Claude Code
+- **使用阶段**：前端重构 + 后端最小增强 + 合规性审查与修正
+- **使用任务**：①重做前端（按每种身份的 main 业务流程顺序组织工作台，前后端可拆分）；②后端最小增强以支撑前端展示；③对照 specs 逐项核查并修复规范违例。
+- **输入 Prompt 摘要**：详细阅读实验指导书与四个实验文档，检查代码是否按规范完成；调用 frontend-design / ui-ux-pro-max 重做前端，重点保证每种身份下不同功能之间的流程顺序、体验舒适便捷；随后按「一切按照文档中所给的规范要求来」补齐合规缺口。
+- **Agent 修改文件**：static/index.html、static/css/app.css、static/js/api.js、static/js/app.js；app/domain/models.py、app/schemas/{circulation,reservation,catalog,admin}.py、app/repositories/{reader,circulation,reservation,catalog}_repo.py、app/services/{reader,policy,fine,admin}_service.py、app/routers/{readers,admin}.py、app/seed.py；tests/{test_reader,test_permission,test_policy}.py；README.md
+- **输出摘要**：①前端三文件分离（api.js 以 `API_BASE` 为唯一拆分点），读者/馆员/管理员三种身份分别按「查询图书→我的借阅→我的预约→注册账号」「办理借书→办理还书→读者借阅查询」「借阅证管理→图书与馆藏→人员管理→规则管理」编号导航；②后端纯增量新增读者/借阅证/馆员/系统管理员/借阅规则/罚款规则列表端点，借阅/预约/书目 DTO 内联书名/作者/条码/馆藏数；③修复 3 处规范违例：BR-002 借阅证号改为 `CARD+4位年份+6位序号`、GET /api/readers/{id} 增加「读者仅查本人」权限校验、借阅/罚款规则增加非负校验（负数返回 422）。
+- **人工审查结果**：证号格式现为 CARD2026xxxxxx 全局唯一；读者越权查他人信息返回 403；规则参数非负校验生效；前端流程顺序与 UC-001~004 / 101~103 / 201~209 对应；现有 library.db 已就地迁移为新证号。
+- **测试结果**：33 个测试全部通过（原 29 + 新增 4：证号格式、本人信息权限 ×2、负数规则校验）。
+- **Git 提交**：（待提交）
+
+## 第 7 次使用
+
+- **使用工具**：Claude Code
+- **使用阶段**：读者身份模型调整（借阅证号对外、读者 ID 内部）
+- **使用任务**：让读者登录、查询借阅、预约、借书统一使用借阅证号，读者 ID 仅作数据库主键，废弃对外暴露读者 ID。
+- **输入 Prompt 摘要**：现在整个系统借阅证号和读者 ID 是否一致？可以在登录或借书均使用借阅证号、废弃读者 ID 吗？（用户选择「证号对外、ID 留内部」）
+- **Agent 修改文件**：app/services/reader_service.py、app/routers/readers.py、tests/test_reader.py、static/js/app.js、README.md、specs/19-ai-usage-log.md
+- **输出摘要**：后端新增 `GET /api/readers/by-card/{card_no}`（借阅证号 → 读者，仅有效证），ReaderService 增加 `get_reader_by_card`；前端读者工作台把「读者 ID 输入框」改为「借阅证号输入框」，输入证号后调 by-card 解析出内部读者 id 并缓存证号/姓名，注册成功提示改为「到馆员处领取借阅证」，其余「读者ID」文案统一改为「借阅证号」。
+- **人工审查结果**：证号对外、id 内部的主键/身份边界清晰；借阅证号全局唯一且 1:1 映射读者 id；前端登录态用 localStorage 持久化证号，刷新后可自动恢复登录。
+- **测试结果**：35 个测试全部通过（原 33 + 新增 2：证号解析成功 / 证号不存在返回 404）。
+- **Git 提交**：（待提交）

@@ -58,6 +58,8 @@ pytest -v
 
 在 `/docs` 里更简单：点右上角 **Authorize** 按钮，粘贴角色（`admin` / `librarian` / `reader`，可带用户 id 如 `admin:1`）即可全局生效。Bearer 令牌优先于 `X-Role` 头。
 
+> **读者身份说明**：借阅证号（`card_no`）对外，读者内部 id（`reader_id`）仅作数据库主键。读者登录、查借阅、预约、借书均使用借阅证号——读者前端用 `GET /api/readers/by-card/{card_no}` 把证号解析成内部读者 id，再携带 `X-User-Id` 调用借阅/预约接口。
+
 ## 7. 核心用例
 
 - 读者：注册、查询图书、查询本人借阅信息、预约图书
@@ -75,6 +77,7 @@ GET  /api/catalog/books                  查询图书
 POST /api/circulation/borrow             办理借书（librarian）
 POST /api/circulation/return             办理还书（librarian）
 GET  /api/readers/{id}/loans             查询借阅信息
+GET  /api/readers/by-card/{card_no}      借阅证号登录（读者）
 POST /api/reservations                   预约图书
 ```
 
@@ -104,9 +107,9 @@ POST /api/reservations                   预约图书
 
 | 借阅证号 | 读者 | 类型 | 上限 / 期限 |
 |---|---|---|---|
-| 1 | 张三 | 本科生 | 5 本 / 30 天 |
-| 2 | 李四 | 研究生 | 10 本 / 60 天 |
-| 3 | 王五 | 教师 | 20 本 / 90 天 |
+| CARD2026000001 | 张三 | 本科生 | 5 本 / 30 天 |
+| CARD2026000002 | 李四 | 研究生 | 10 本 / 60 天 |
+| CARD2026000003 | 王五 | 教师 | 20 本 / 90 天 |
 
 **馆藏副本（条码）**
 
@@ -120,7 +123,7 @@ POST /api/reservations                   预约图书
 
 在 `/docs` 右上角 Authorize 填 `librarian`，然后：
 
-- 借书：`POST /api/circulation/borrow` → `{"card_no": "1", "barcode": "BC-1001"}`
+- 借书：`POST /api/circulation/borrow` → `{"card_no": "CARD2026000001", "barcode": "BC-1001"}`
 - 还书：`POST /api/circulation/return` → `{"barcode": "BC-1001"}`
 
 超期还书会自动按类型生成罚款（如中文图书 0.10 元/天）。

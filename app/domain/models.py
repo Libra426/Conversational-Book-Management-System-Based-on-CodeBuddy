@@ -96,6 +96,14 @@ class BookTitle(Base):
     items = relationship("LibraryItem", back_populates="title")
     reservations = relationship("Reservation", back_populates="title")
 
+    @property
+    def total_count(self) -> int:
+        return len(self.items)
+
+    @property
+    def available_count(self) -> int:
+        return sum(1 for i in self.items if i.status == ItemStatus.AVAILABLE)
+
 
 class LibraryItem(Base):
     __tablename__ = "library_items"
@@ -130,6 +138,23 @@ class Loan(Base):
         today = today or date.today()
         return self.due_date < today
 
+    # 面向前端展示的内联字段：借阅的书籍/条码信息。
+    @property
+    def barcode(self) -> str:
+        return self.item.barcode
+
+    @property
+    def title(self) -> str:
+        return self.item.title.title
+
+    @property
+    def author(self) -> str:
+        return self.item.title.author
+
+    @property
+    def item_type(self) -> ItemType:
+        return self.item.title.item_type
+
 
 class Reservation(Base):
     __tablename__ = "reservations"
@@ -142,6 +167,19 @@ class Reservation(Base):
 
     reader = relationship("Reader", back_populates="reservations")
     title = relationship("BookTitle", back_populates="reservations")
+
+    # 面向前端展示的内联字段：预约的书籍信息（title 关系名已占用，故用 book_title）。
+    @property
+    def book_title(self) -> str:
+        return self.title.title
+
+    @property
+    def author(self) -> str:
+        return self.title.author
+
+    @property
+    def item_type(self) -> ItemType:
+        return self.title.item_type
 
 
 class BorrowPolicy(Base):

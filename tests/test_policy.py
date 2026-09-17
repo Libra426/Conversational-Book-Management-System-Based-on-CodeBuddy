@@ -4,6 +4,7 @@ from datetime import date
 from app.domain.enums import ItemType, ReaderType
 from app.services.fine_service import FineService
 from app.services.policy_service import BorrowPolicyService
+from tests.helpers import ADMIN
 
 
 def test_borrow_policy_defaults(db):
@@ -43,3 +44,23 @@ def test_fine_zero_or_negative(db):
     svc = FineService(db)
     assert svc.calculate_fine(ItemType.CHINESE_BOOK, 0) == 0.0
     assert svc.calculate_fine(ItemType.CHINESE_BOOK, -3) == 0.0
+
+
+def test_negative_policy_rejected(client):
+    # UC-209：借阅数量/天数必须非负
+    resp = client.post(
+        "/api/admin/borrow-policies",
+        json={"reader_type": "UNDERGRADUATE", "max_borrow_count": -1, "borrow_days": 30},
+        headers=ADMIN,
+    )
+    assert resp.status_code == 422
+
+
+def test_negative_fine_rejected(client):
+    # UC-209：罚款金额必须非负
+    resp = client.post(
+        "/api/admin/fine-rules",
+        json={"item_type": "CHINESE_BOOK", "fine_per_day": -0.5},
+        headers=ADMIN,
+    )
+    assert resp.status_code == 422
