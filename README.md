@@ -238,4 +238,4 @@ pytest -v                 # 或 python -m pytest -v
 
 ## 14. Agent 使用记录
 
-本项目 Specs 与代码均由 **Claude Code** 辅助生成，人工审查后冻结 baseline。使用记录见 [`specs/19-ai-usage-log.md`](specs/19-ai-usage-log.md)（共 9 次），Git 提交历史见 [`specs/21-git-history.md`](specs/21-git-history.md)。
+本项目 Specs 与代码均由 **Claude Code** 辅助生成，人工审查后冻结 baseline。使用记录见 [`specs/19-ai-usage-log.md`](specs/19-ai-usage-log.md)（共 9 次），Git 提交历史见 [`GIT_HISTORY.md`](GIT_HISTORY.md)。
