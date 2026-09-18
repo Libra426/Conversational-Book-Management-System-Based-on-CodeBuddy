@@ -21,8 +21,8 @@
 | UC-103 | 查询读者借阅信息 | Librarian |
 | UC-201 | 办理借阅证 | SystemAdmin |
 | UC-202 | 删除借阅证 | SystemAdmin |
-| UC-203 | 添加图书管理员 | SystemAdmin |
-| UC-204 | 删除图书管理员 | SystemAdmin |
+| UC-203 | 添加管理员（图书管理员/系统管理员） | SystemAdmin |
+| UC-204 | 删除管理员（图书管理员/系统管理员） | SystemAdmin |
 | UC-205 | 添加图书标题信息 | SystemAdmin |
 | UC-206 | 删除图书标题信息 | SystemAdmin |
 | UC-207 | 添加馆藏副本 | SystemAdmin |

@@ -94,6 +94,34 @@ enum ItemType {
   THESIS
 }
 
+enum CardStatus {
+  ACTIVE
+  CANCELLED
+}
+
+enum ItemStatus {
+  AVAILABLE
+  BORROWED
+  RESERVED
+  REMOVED
+}
+
+enum LoanStatus {
+  BORROWED
+  RETURNED
+}
+
+enum ReservationStatus {
+  ACTIVE
+  FULFILLED
+  CANCELLED
+}
+
+enum FineStatus {
+  UNPAID
+  PAID
+}
+
 Reader "1" -- "1" BorrowCard : owns
 Reader "1" -- "*" Loan : has
 Reader "1" -- "*" Reservation : makes

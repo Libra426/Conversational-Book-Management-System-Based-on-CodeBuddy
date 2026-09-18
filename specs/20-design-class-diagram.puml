@@ -1,11 +1,14 @@
 @startuml
+top to bottom direction
 ' 设计类图：分层架构中各层的类、接口及其依赖关系
 ' 对应《实验指导书》实验一·步骤4 "设计各层包含的类、接口及其交互（类图）"
 
 skinparam packageStyle rectangle
 skinparam classAttributeIconSize 0
+skinparam ranksep 40
+skinparam nodesep 20
 
-package "presentation 展现层 (routers)" {
+package "presentation 展现层 (routers)" as P {
   class ReadersRouter <<APIRouter>>
   class CatalogRouter <<APIRouter>>
   class CirculationRouter <<APIRouter>>
@@ -13,7 +16,7 @@ package "presentation 展现层 (routers)" {
   class AdminRouter <<APIRouter>>
 }
 
-package "application 应用层 (services)" {
+package "application 应用层 (services)" as A {
   class ReaderService
   class CatalogService
   class CirculationService
@@ -23,7 +26,7 @@ package "application 应用层 (services)" {
   class FineService <<Strategy>>
 }
 
-package "infrastructure 基础设施层 (repositories)" {
+package "infrastructure 基础设施层 (repositories)" as I {
   class ReaderRepo <<Repository>>
   class BorrowCardRepo <<Repository>>
   class BookTitleRepo <<Repository>>
@@ -33,7 +36,7 @@ package "infrastructure 基础设施层 (repositories)" {
   class ReservationRepo <<Repository>>
 }
 
-package "domain 领域层 (entities)" {
+package "domain 领域层 (entities)" as D {
   class Reader
   class BorrowCard
   class BookTitle
@@ -47,11 +50,29 @@ package "domain 领域层 (entities)" {
   class SystemAdmin
 }
 
-package "dto 传输对象 (schemas)" {
+package "dto 传输对象 (schemas)" as T {
   class ReaderCreate
+  class ReaderOut
+  class BorrowCardOut
+  class IssueCardRequest
+  class BookTitleCreate
+  class BookTitleOut
+  class LibraryItemCreate
+  class LibraryItemOut
   class BorrowRequest
   class ReturnRequest
+  class FineOut
+  class LoanOut
+  class ReturnOut
   class ReservationRequest
+  class ReservationOut
+  class BorrowPolicyOut
+  class FineRuleOut
+  class StaffOut
+  class BorrowPolicyUpsert
+  class FineRuleUpsert
+  class LibrarianCreate
+  class SystemAdminCreate
 }
 
 ' 展现层 -> 应用层
@@ -79,10 +100,10 @@ CirculationService ..> FineRecordRepo
 ReservationService ..> ReaderRepo
 ReservationService ..> BookTitleRepo
 ReservationService ..> ReservationRepo
-AdminService ..> ReaderRepo
-AdminService ..> BorrowCardRepo
-AdminService ..> BookTitleRepo
-AdminService ..> LibraryItemRepo
+
+' 应用层直接维护管理员实体（AdminService 未设独立 Repository，经 DB 会话操作）
+AdminService ..> Librarian
+AdminService ..> SystemAdmin
 
 ' 应用层内部：CirculationService 组合两个策略服务
 CirculationService ..> BorrowPolicyService : <<use>>
@@ -112,5 +133,16 @@ note bottom of CirculationService
   经 Repository 持久化，体现
   服务层 + 策略 + 仓库 模式。
 end note
+
+note bottom of AdminService
+  直接经 DB 会话维护 Librarian 与
+  SystemAdmin，未设独立 Repository。
+end note
+
+' 强制各层自上而下竖向堆叠（隐藏边，仅用于排版，不显示箭头）
+P -[hidden]-> A
+A -[hidden]-> I
+I -[hidden]-> D
+D -[hidden]-> T
 
 @enduml

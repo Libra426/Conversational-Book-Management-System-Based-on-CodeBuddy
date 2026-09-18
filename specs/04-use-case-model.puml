@@ -22,9 +22,11 @@ usecase "计算超期罚款" as UC_CalcFine
 usecase "办理借阅证" as UC_IssueCard
 usecase "删除借阅证" as UC_RevokeCard
 usecase "添加图书标题" as UC_AddTitle
+usecase "删除图书标题" as UC_DeleteTitle
 usecase "添加馆藏副本" as UC_AddItem
+usecase "删除馆藏副本" as UC_DeleteItem
 usecase "添加/删除管理员" as UC_MaintainAdmin
-usecase "维护借阅规则" as UC_MaintainRule
+usecase "维护借阅规则和罚款规则" as UC_MaintainRule
 
 Reader --> UC_Register
 Reader --> UC_QueryBook
@@ -42,7 +44,9 @@ UC_Return ..> UC_CalcFine : <<extend>>
 SystemAdmin --> UC_IssueCard
 SystemAdmin --> UC_RevokeCard
 SystemAdmin --> UC_AddTitle
+SystemAdmin --> UC_DeleteTitle
 SystemAdmin --> UC_AddItem
+SystemAdmin --> UC_DeleteItem
 SystemAdmin --> UC_MaintainAdmin
 SystemAdmin --> UC_MaintainRule
 

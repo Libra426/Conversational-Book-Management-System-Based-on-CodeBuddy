@@ -88,8 +88,11 @@
 
 ```
 Reader 1 ── 1 BorrowCard
-Reader 1 ── N Loan ── 1 LibraryItem ── N 1 BookTitle
-Reader 1 ── N Reservation ── N 1 BookTitle
+Reader 1 ── N Loan
+Loan   N ── 1 LibraryItem
+LibraryItem N ── 1 BookTitle
+Reader 1 ── N Reservation
+Reservation N ── 1 BookTitle
 Loan   1 ── N FineRecord
 ReaderType  1 ── 1 BorrowPolicy
 ItemType    1 ── 1 FineRule
