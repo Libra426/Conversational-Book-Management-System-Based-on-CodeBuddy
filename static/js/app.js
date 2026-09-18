@@ -398,17 +398,15 @@
           </div>
           <div class="card">
             <div class="card-head"><h2>馆藏副本</h2></div>
-            <div class="form-row">
-              <form data-form="add-item" class="form-row" style="flex:1">
-                <div class="field" style="max-width:360px"><label>所属标题</label><select id="i-title"><option value="">加载中…</option></select></div>
-                <div class="field"><label>条码 <span class="req">*</span></label><input id="i-barcode" required placeholder="BC-1001"></div>
-                <button class="btn btn-primary" type="submit">${icon('plus')}添加副本</button>
-              </form>
-              <form data-form="remove-item" class="form-row" style="flex:1">
-                <div class="field"><label>移除副本（条码）</label><input id="di-barcode" required placeholder="BC-1001"></div>
-                <button class="btn btn-danger-ghost" type="submit">${icon('trash')}移除</button>
-              </form>
-            </div>
+            <form data-form="add-item" class="form-row">
+              <div class="field" style="max-width:320px"><label>所属标题</label><select id="i-title"><option value="">加载中…</option></select></div>
+              <div class="field" style="max-width:240px"><label>条码 <span class="req">*</span></label><input id="i-barcode" required placeholder="BC-1001"></div>
+              <button class="btn btn-primary" type="submit">${icon('plus')}添加副本</button>
+            </form>
+            <form data-form="remove-item" class="form-row" style="margin-top:14px">
+              <div class="field" style="max-width:240px"><label>移除副本（条码）</label><input id="di-barcode" required placeholder="BC-1001"></div>
+              <button class="btn btn-danger-ghost" type="submit">${icon('trash')}移除</button>
+            </form>
             <div id="add-item-result"></div>
           </div>
           <div class="card">
@@ -428,7 +426,7 @@
           <div class="card">
             <div class="card-head"><h2>图书管理员</h2></div>
             <form data-form="add-librarian" class="form-row">
-              <div class="field"><label>姓名 <span class="req">*</span></label><input id="l-name" required></div>
+              <div class="field" style="max-width:320px"><label>姓名 <span class="req">*</span></label><input id="l-name" required></div>
               <button class="btn btn-primary" type="submit">${icon('plus')}添加</button>
             </form>
             <div id="librarians-box" style="margin-top:14px"></div>
@@ -436,7 +434,7 @@
           <div class="card">
             <div class="card-head"><h2>系统管理员</h2></div>
             <form data-form="add-sysadmin" class="form-row">
-              <div class="field"><label>姓名 <span class="req">*</span></label><input id="sa-name" required></div>
+              <div class="field" style="max-width:320px"><label>姓名 <span class="req">*</span></label><input id="sa-name" required></div>
               <button class="btn btn-primary" type="submit">${icon('plus')}添加</button>
             </form>
             <div id="sysadmins-box" style="margin-top:14px"></div>
